@@ -11,7 +11,7 @@ cat > $BACKER_CONFIG_FILE <<EOF
 {
   "witroot": {
     "dt": "2022-01-20T12:57:59.823350+00:00",
-    "curls": ["tcp://${BACKER_HOST}:5665/", "${BACKER_URL}"]
+    "curls": ["tcp://localhost:5665/", "http://localhost:5665", "tcp://cardano-backer:5666", "http://cardano-backer:5666", "tcp://${BACKER_HOST}:5665/", "${BACKER_URL}"]
   },
   "dt": "2022-01-20T12:57:59.823350+00:00",
   "iurls": [
