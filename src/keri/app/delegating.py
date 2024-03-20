@@ -50,6 +50,7 @@ class Sealer(doing.DoDoer):
                                      **kwa)
 
     def delegation(self, pre, sn=None, proxy=None):
+        print(f"we are delegating {pre}")
         if pre not in self.hby.habs:
             raise kering.ValidationError(f"{pre} is not a valid local AID for delegation")
 
@@ -79,8 +80,10 @@ class Sealer(doing.DoDoer):
             raise kering.ValidationError("no proxy to send messages for delegation")
 
         # Send exn message for notification purposes
+        print(f"the delpre is {delpre}")
         exn, atc = delegateRequestExn(phab, delpre=delpre, evt=bytes(evt), aids=smids)
 
+        print(f"postman sending to {hab.kever.delpre}, the SAID is {exn.ked["d"]}")
         self.postman.send(hab=phab, dest=hab.kever.delpre, topic="delegate", serder=exn, attachment=atc)
 
         srdr = serdering.SerderKERI(raw=evt)
