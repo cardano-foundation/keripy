@@ -68,6 +68,7 @@ class Exchanger:
             cigars (list): of Cigar instances of attached non-trans sigs
 
         """
+        print(f"processing received event {serder.pretty()}")
         route = serder.ked["r"]
         sender = serder.ked["i"]
         pathed = kwargs["pathed"] if "pathed" in kwargs else []
