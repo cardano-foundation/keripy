@@ -631,7 +631,9 @@ class Multiplexor:
             case _:
                 raise ValueError(f"invalid route {route} for multiplexed exn={ked}")
 
-        if len(self.hby.db.meids.get(keys=(esaid,))) == 0:  # No one has submitted this message yet
+        meids_esaid = self.hby.db.meids.get(keys=(esaid,))
+
+        if len(meids_esaid) == 0:  # No one has submitted this message yet
             if sender not in self.hby.habs:  # We are not sending this one, notify us
                 data = dict(
                     r=route,
@@ -639,6 +641,15 @@ class Multiplexor:
                 )
 
                 self.notifier.add(attrs=data)
+
+        if "icp" in route and len(meids_esaid) != 0:
+            if not [i for i in meids_esaid if i.qb64 == serder.said]:
+                if sender not in self.hby.habs:
+                    data = dict(
+                        r=route,
+                        d=serder.said
+                    )
+                    self.notifier.add(attrs=data)
 
         self.hby.db.meids.add(keys=(esaid,), val=coring.Saider(qb64=serder.said))
         self.hby.db.maids.add(keys=(esaid,), val=coring.Prefixer(qb64=serder.pre))
