@@ -276,7 +276,7 @@ class Oobiery:
 
     RetryDelay = 30
 
-    def __init__(self, hby, rvy=None, clienter=None, cues=None):
+    def __init__(self, hby, rvy=None, clienter=None, cues=None, tock=0.0):
         """  DoDoer to handle the request and parsing of OOBIs
 
         Parameters:
@@ -302,7 +302,7 @@ class Oobiery:
 
         self.cues = cues if cues is not None else decking.Deck()
         self.clients = dict()
-        self.doers = [self.clienter, doing.doify(self.scoobiDo)]
+        self.doers = [self.clienter, doing.doify(self.scoobiDo, tock=tock)]
 
     def registerReplyRoutes(self, router):
         """ Register the routes for processing messages embedded in `rpy` event messages
