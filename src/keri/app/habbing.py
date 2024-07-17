@@ -542,6 +542,7 @@ class Habery:
 
     def makeSignifyGroupHab(self, name, mhab, smids, rmids=None,  ns=None, **kwa):
         # create group Hab in this Habery
+        print(f"makeSignifyGroupHab with smids {smids} rmids {rmids}")
         hab = SignifyGroupHab(ks=self.ks, db=self.db, cf=self.cf, mgr=self.mgr,
                               rtr=self.rtr, rvy=self.rvy, kvy=self.kvy, psr=self.psr,
                               name=name, mhab=mhab, smids=smids, rmids=rmids, ns=ns, temp=self.temp)
@@ -2530,6 +2531,7 @@ class SignifyGroupHab(SignifyHab):
 
         habord = basing.HabitatRecord(hid=self.pre, mid=self.mhab.pre, smids=self.smids, rmids=self.rmids,
                                       sid=self.pre, name=self.name, domain=self.ns)
+        print(f"signifyGroupHab being saved as {habord}")
         self.save(habord)
 
         self.inited = True
