@@ -50,8 +50,10 @@ def migrate(db):
     habords = dict()
     # Update Hab records from .habs with name
     for name, habord in habs.getItemIter():
+        print(f"hab with id {habord.hid} has {asdict(habord)}")
         name = ".".join(name)  # detupleize the database key name
         nhabord = basing.HabitatRecord(**asdict(habord))
+        print(f"now nhabord is {nhabord}")
         nhabord.name = name
         habords[habord.hid] = nhabord
 
@@ -59,9 +61,11 @@ def migrate(db):
 
     # Update Hab records from .nmsp with name and domain (ns)
     for keys, habord in nmsp.getItemIter():
+        print(f"hab with id {habord.hid} has {asdict(habord)}")
         ns = keys[0]
         name = ".".join(keys[1:])  # detupleize the database key name
         nhabord = basing.HabitatRecord(**asdict(habord))
+        print(f"now nhabord is {nhabord}")
         nhabord.name = name
         nhabord.domain = ns
         habords[habord.hid] = nhabord
@@ -70,6 +74,7 @@ def migrate(db):
 
     # Rekey .habs and create .names index
     for pre, habord in habords.items():
+        print(f"pinning {habord}")
         db.habs.pin(keys=(pre,), val=habord)
         ns = "" if habord.domain is None else habord.domain
         db.names.pin(keys=(ns, habord.name), val=pre)
