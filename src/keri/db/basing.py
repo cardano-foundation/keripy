@@ -1280,9 +1280,9 @@ class Baser(dbing.LMDBer):
         Reload stored prefixes and Kevers from .habs
 
         """
-        # Check migrations to see if this database is up to date.  Error otherwise
-        if not self.current:
-            raise kering.DatabaseError("Database migrations must be run.")
+        # # Check migrations to see if this database is up to date.  Error otherwise
+        # if not self.current:
+        #     raise kering.DatabaseError("Database migrations must be run.")
 
         removes = []
         for keys, data in self.habs.getItemIter():
