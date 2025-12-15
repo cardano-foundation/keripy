@@ -533,7 +533,7 @@ class Serder:
 
 
     def __init__(self, *, raw=b'', sad=None, strip=False, smellage=None,
-                 genus=GenDex.KERI, gvrsn=Vrsn_2_0, verify=True, makify=False,
+                 genus=GenDex.KERI, gvrsn=Vrsn_2_0, verify=False, makify=False,
                  proto=None, vrsn=None, kind=None, ilk=None, saids=None):
         """Deserialize raw if provided. Update properties from deserialized raw.
             Verifies said(s) embedded in sad as given by labels.
