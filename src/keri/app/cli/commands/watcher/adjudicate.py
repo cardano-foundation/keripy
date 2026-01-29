@@ -12,7 +12,7 @@ import sys
 from hio.base import doing
 
 from keri import help
-from keri.app import connecting, indirecting, querying, watching
+from keri.app import indirecting, organizing, querying, watching
 from keri.app.cli.common import existing
 from keri.help import helping
 from keri.kering import ConfigurationError
@@ -73,7 +73,7 @@ class AdjudicationDoer(doing.DoDoer):
         _ = (yield tock)
 
         try:
-            org = connecting.Organizer(hby=self.hby)
+            org = organizing.Organizer(hby=self.hby)
 
             if self.poll:
                 end = helping.nowUTC() + datetime.timedelta(seconds=5)

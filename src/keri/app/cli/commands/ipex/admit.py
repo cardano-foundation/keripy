@@ -7,7 +7,7 @@ import argparse
 
 from hio.base import doing
 
-from keri.app import connecting, habbing, grouping, indirecting, agenting, forwarding
+from keri.app import habbing, grouping, indirecting, agenting, forwarding, organizing
 from keri.app.cli.common import existing
 from keri.app.notifying import Notifier
 from keri.core import parsing, coring, eventing
@@ -54,7 +54,7 @@ class AdmitDoer(doing.DoDoer):
         self.hby = existing.setupHby(name=name, base=base, bran=bran)
         self.hab = self.hby.habByName(alias)
         self.rgy = credentialing.Regery(hby=self.hby, name=name, base=base)
-        self.org = connecting.Organizer(hby=self.hby)
+        self.org = organizing.Organizer(hby=self.hby)
         self.witq = agenting.WitnessInquisitor(hby=self.hby)
 
         self.kvy = eventing.Kevery(db=self.hby.db)

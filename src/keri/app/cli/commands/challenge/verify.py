@@ -11,7 +11,7 @@ import sys
 from hio.base import doing
 
 from keri import help
-from keri.app import indirecting, challenging, connecting, signaling
+from keri.app import indirecting, challenging, organizing, signaling
 from keri.app.cli.commands.challenge.generate import generateWords
 from keri.app.cli.common import existing
 from keri.help import helping
@@ -77,7 +77,7 @@ class VerifyDoer(doing.DoDoer):
 
         self.hab = self.hby.habByName(alias)
         self.exc = exchanging.Exchanger(hby=self.hby, handlers=[])
-        self.org = connecting.Organizer(hby=self.hby)
+        self.org = organizing.Organizer(hby=self.hby)
         signaler = signaling.Signaler()
 
         challenging.loadHandlers(db=self.hby.db, signaler=signaler, exc=self.exc)

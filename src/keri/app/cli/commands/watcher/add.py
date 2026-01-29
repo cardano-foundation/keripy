@@ -9,7 +9,7 @@ import argparse
 from hio.base import doing
 
 from keri import help
-from keri.app import connecting, habbing, forwarding
+from keri.app import habbing, forwarding, organizing
 from keri.app.cli.common import existing
 from keri.core import serdering
 from keri.kering import Roles
@@ -52,7 +52,7 @@ class AddDoer(doing.DoDoer):
     def __init__(self, name, alias, base, bran, watcher, watched):
         self.hby = existing.setupHby(name=name, base=base, bran=bran)
         self.hab = self.hby.habByName(alias)
-        self.org = connecting.Organizer(hby=self.hby)
+        self.org = organizing.Organizer(hby=self.hby)
 
         wat = None
         if watcher in self.hby.kevers:

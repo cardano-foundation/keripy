@@ -8,7 +8,7 @@ import os
 
 from hio.base import doing
 
-from keri.app import forwarding, connecting, habbing, grouping, indirecting
+from keri.app import forwarding, habbing, grouping, indirecting, organizing
 from keri.app.cli.common import existing
 from keri.app.notifying import Notifier
 from keri.core import parsing, coring, eventing
@@ -52,7 +52,7 @@ class SpurnDoer(doing.DoDoer):
         self.hby = existing.setupHby(name=name, base=base, bran=bran)
         self.hab = self.hby.habByName(alias)
         self.rgy = credentialing.Regery(hby=self.hby, name=name, base=base)
-        self.org = connecting.Organizer(hby=self.hby)
+        self.org = organizing.Organizer(hby=self.hby)
 
         kvy = eventing.Kevery(db=self.hby.db)
         tvy = teventing.Tevery(db=self.hby.db, reger=self.rgy.reger)

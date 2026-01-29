@@ -12,7 +12,7 @@ from hio.base import doing
 from prettytable import PrettyTable
 
 from keri import help, kering
-from keri.app import habbing, indirecting, agenting, notifying, grouping, connecting, forwarding
+from keri.app import habbing, indirecting, agenting, notifying, grouping, forwarding, organizing
 from keri.app.cli.common import existing, displaying
 from keri.core import coring, eventing, scheming, parsing, routing, serdering
 from keri.peer import exchanging
@@ -71,7 +71,7 @@ class JoinDoer(doing.DoDoer):
         self.rgy = credentialing.Regery(hby=self.hby, name=name, base=base)
         self.hbyDoer = habbing.HaberyDoer(habery=self.hby)  # setup doer
         self.witq = agenting.WitnessInquisitor(hby=self.hby)
-        self.org = connecting.Organizer(hby=self.hby)
+        self.org = organizing.Organizer(hby=self.hby)
         self.notifier = notifying.Notifier(hby=self.hby)
         self.exc = exchanging.Exchanger(hby=self.hby, handlers=[])
         self.verifier = verifying.Verifier(hby=self.hby, reger=self.rgy.reger)

@@ -18,7 +18,7 @@ from keri.core import coring
 from . import httping
 from .. import help
 from .. import kering
-from ..app import connecting
+from . import organizing
 from ..core import routing, eventing, parsing, scheming, serdering
 from ..db import basing
 from ..end import ending
@@ -290,7 +290,7 @@ class Oobiery:
             self.registerReplyRoutes(self.rvy.rtr)
 
         self.clienter = clienter or httping.Clienter()
-        self.org = connecting.Organizer(hby=self.hby)
+        self.org = organizing.Organizer(hby=self.hby)
 
         # Set up a local parser for returned events from OOBI queries.
         rtr = routing.Router()
