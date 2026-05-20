@@ -223,7 +223,7 @@ class BaseRegistry:
     def registries(self):
         return self.reger.registries
 
-    def processEvent(self, serder):
+    def processEvent(self, serder, seqner=None, saider=None):
         """ Process registry events
 
         Parameters:
@@ -232,7 +232,7 @@ class BaseRegistry:
         """
 
         try:
-            self.tvy.processEvent(serder=serder)
+            self.tvy.processEvent(serder=serder, seqner=seqner, saider=saider)
         except kering.MissingAnchorError:
             logger.info("Credential registry missing anchor for inception = {}".format(serder.said))
             logger.debug(f"event=\n{serder.pretty()}\n")

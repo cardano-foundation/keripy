@@ -164,7 +164,7 @@ class Counselor(doing.DoDoer):
 
             if witer:  # We are elected witnesser, We've already done out part in Boatswain, we are done.
                 if self.swain.complete(prefixer=kever.prefixer, seqner=coring.Seqner(sn=kever.sn)):
-                    self.hby.db.gdee.rem(keys=(pre,))
+                    self.hby.db.gdee.rem(keys=(pre,), val=(seqner, saider))
                     logger.info(f"Delegation approval for {pre} received.")
 
                     self.hby.db.cgms.put(keys=(pre, seqner.qb64), val=saider)
@@ -176,12 +176,12 @@ class Counselor(doing.DoDoer):
                     couple = aseq.qb64b + serder.saidb
                     dgkey = dbing.dgKey(pre, saider.qb64b)
                     self.hby.db.setAes(dgkey, couple)  # authorizer event seal (delegator/issuer)
-                    self.hby.db.gdee.rem(keys=(pre,))
+                    self.hby.db.gdee.rem(keys=(pre,), val=(seqner, saider))
                     logger.info(f"Delegation approval for {pre} received.")
 
                     # Move to escrow waiting for witness receipts
                     logger.info(f"Waiting for witness receipts for {pre}")
-                    self.hby.db.gdee.rem(keys=(pre,))
+                    self.hby.db.gdee.rem(keys=(pre,), val=(seqner, saider))
                     self.hby.db.gpwe.add(keys=(pre,), val=(seqner, saider))
 
     def processPartialWitnessEscrow(self):
@@ -209,7 +209,7 @@ class Counselor(doing.DoDoer):
                     if not witnessed:
                         continue
                 logger.info(f"Witness receipts complete, {pre} confirmed.")
-                self.hby.db.gpwe.rem(keys=(pre,))
+                self.hby.db.gpwe.rem(keys=(pre,), val=(seqner, saider))
                 self.hby.db.cgms.put(keys=(pre, seqner.qb64), val=saider)
             elif not witer:
                 self.witDoer.gets.append(dict(pre=pre, sn=seqner.sn))
