@@ -236,6 +236,9 @@ class BaseRegistry:
         except kering.MissingAnchorError:
             logger.info("Credential registry missing anchor for inception = {}".format(serder.said))
             logger.debug(f"event=\n{serder.pretty()}\n")
+        except kering.OutOfOrderError:
+            logger.info("Out of order registry event = {}".format(serder.said))
+            logger.debug(f"event=\n{serder.pretty()}\n")
 
     def anchorMsg(self, pre, regd, seqner, saider):
         """  Create key event with seal to serder anchored as data.

@@ -111,7 +111,7 @@ class Counselor(doing.DoDoer):
             snkey = dbing.snKey(pre, seqner.sn)
             sdig = self.hby.db.getKeLast(key=snkey)
             if sdig:
-                self.hby.db.gpse.rem(keys=(pre,))
+                self.hby.db.gpse.rem(keys=(pre,), val=(seqner, saider))
                 ghab = self.hby.habs[pre]
                 kever = ghab.kever
                 keys = [verfer.qb64 for verfer in kever.verfers]
