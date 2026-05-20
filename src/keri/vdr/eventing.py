@@ -25,7 +25,7 @@ from ..core.eventing import SealEvent, ample, TraitDex, verifySigs
 from ..db import basing, dbing
 from ..db.dbing import dgKey, snKey, splitSnKey
 from ..help import helping
-from ..kering import (MissingWitnessSignatureError, Version,
+from ..kering import (MissingWitnessSignatureError, Version, MisfitEventSourceError,
                       MissingAnchorError, ValidationError, OutOfOrderError, LikelyDuplicitousError)
 from ..vdr import viring
 
@@ -1542,11 +1542,11 @@ class Tevery:
         if not self.lax:
             if self.local:
                 if regk not in self.registries:  # nonlocal event when in local mode
-                    raise ValueError("Nonlocal event regk={} when local mode for registries={}."
+                    raise MisfitEventSourceError("Nonlocal event regk={} when local mode for registries={}."
                                      "".format(regk, self.registries))
             else:
                 if regk in self.registries:  # local event when not in local mode
-                    raise ValueError("Local event regk={} when nonlocal mode."
+                    raise MisfitEventSourceError("Local event regk={} when nonlocal mode."
                                      "".format(regk))
 
         if regk not in self.tevers:  # first seen for this registry
@@ -2064,7 +2064,7 @@ class Tevery:
 
                 self.processEvent(serder=tserder, seqner=seqner, saider=saider, wigers=bigers)
 
-            except OutOfOrderError as ex:
+            except (OutOfOrderError, MisfitEventSourceError) as ex:
                 # still waiting on missing prior event to validate
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.exception("Tevery unescrow failed: %s", ex.args[0])
@@ -2133,7 +2133,7 @@ class Tevery:
 
                 self.processEvent(serder=tserder, seqner=seqner, saider=saider, wigers=bigers)
 
-            except MissingAnchorError as ex:
+            except (MissingAnchorError, MisfitEventSourceError) as ex:
                 # still waiting on missing prior event to validate
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.exception("Tevery unescrow failed: %s", ex.args[0])
