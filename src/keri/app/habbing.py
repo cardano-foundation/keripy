@@ -19,7 +19,7 @@ from .. import core
 from ..core import (coring, eventing, parsing, routing, serdering, indexing,
                     Counter, Codens)
 from ..db import dbing, basing
-from ..kering import MissingSignatureError, Roles
+from ..kering import MissingSignatureError, OutOfOrderError, Roles
 
 logger = help.ogler.getLogger()
 
@@ -2555,7 +2555,7 @@ class SignifyGroupHab(SignifyHab):
         try:
             # verify event, update kever state, and escrow if group
             self.kvy.processEvent(serder=serder, sigers=sigers)
-        except MissingSignatureError:
+        except (MissingSignatureError, OutOfOrderError):
             pass
         except Exception:
             raise kering.ValidationError(f"Improper Habitat event type={serder.ked['t']} for "
