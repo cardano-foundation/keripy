@@ -2451,6 +2451,8 @@ class SignifyHab(BaseHab):
         try:
             # verify event, update kever state, and escrow if group
             self.kvy.processEvent(serder=serder, sigers=sigers)
+        except (OutOfOrderError):
+            pass
         except Exception:
             raise kering.ConfigurationError(f"Improper Habitat event type={serder.ked['t']} for "
                                             f"pre={self.pre}.")
