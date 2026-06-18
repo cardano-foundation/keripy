@@ -705,9 +705,12 @@ class Parser:
 
         cold = sniff(ims)  # check for spurious counters at front of stream
         if cold in (Colds.txt, Colds.bny):  # not message error out to flush stream
-            # replace with pipelining here once CESR message format supported.
-            raise kering.ColdStartError("Expecting message counter tritet={}"
-                                        "".format(cold))
+            # strip KERIACDCGenusVersion counter if present (genusify=True); else error
+            ctr = yield from self._extractor(ims=ims, klas=Counter, cold=cold)
+            if ctr.code != CtrDex_1_0.KERIACDCGenusVersion:
+                raise kering.ColdStartError("Expecting message counter tritet={}"
+                                            "".format(cold))
+            cold = sniff(ims)
         # Otherwise its a message cold start
 
         while True:  # extract, deserialize, and strip message from ims
@@ -965,6 +968,9 @@ class Parser:
                                                                 abort=pipelined)
                             essrs.append(texter)
 
+
+                    elif ctr.code == CtrDex_1_0.KERIACDCGenusVersion:
+                        pass  # genus-version counter carries no following material; discard
 
                     else:
                         raise kering.UnexpectedCountCodeError("Unsupported count"
