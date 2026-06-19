@@ -711,6 +711,10 @@ class Parser:
                 raise kering.ColdStartError("Expecting message counter tritet={}"
                                             "".format(cold))
             cold = sniff(ims)
+            if cold in (Colds.txt, Colds.bny):  # still a counter after genus — malformed
+                raise kering.UnexpectedCountCodeError("Unexpected counter after "
+                                                      "KERIACDCGenusVersion cold={}"
+                                                      "".format(cold))
         # Otherwise its a message cold start
 
         while True:  # extract, deserialize, and strip message from ims
