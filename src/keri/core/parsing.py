@@ -708,13 +708,14 @@ class Parser:
             # strip KERIACDCGenusVersion counter if present (genusify=True); else error
             ctr = yield from self._extractor(ims=ims, klas=Counter, cold=cold)
             if ctr.code != CtrDex_1_0.KERIACDCGenusVersion:
-                raise kering.ColdStartError("Expecting message counter tritet={}"
-                                            "".format(cold))
+                raise kering.UnexpectedCountCodeError("Expected KERIACDCGenusVersion "
+                                                      "counter got code={} tritet={}"
+                                                      "".format(ctr.code, cold))
             cold = sniff(ims)
             if cold in (Colds.txt, Colds.bny):  # still a counter after genus — malformed
-                raise kering.UnexpectedCountCodeError("Unexpected counter after "
-                                                      "KERIACDCGenusVersion cold={}"
-                                                      "".format(cold))
+                raise kering.ColdStartError("Expecting message after KERIACDCGenusVersion "
+                                            "tritet={}"
+                                            "".format(cold))
         # Otherwise its a message cold start
 
         while True:  # extract, deserialize, and strip message from ims
