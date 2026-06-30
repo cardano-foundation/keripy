@@ -555,12 +555,13 @@ class Multiplexor:
 
     """
 
-    def __init__(self, hby, notifier):
+    def __init__(self, hby, notifier, parser=None):
         """ Create Multiplexor for local database and Habs
 
         Parameters:
             hby (habbing.Habery): database environment for local Habs
             notifier (notifying.Notifier): stores notices for numan consumption
+            parser (parsing.Parser): optional parser to use instead of creating one
 
         """
         self.hby = hby
@@ -569,7 +570,7 @@ class Multiplexor:
         self.exc = exchanging.Exchanger(hby=self.hby, handlers=[])
         self.kvy = eventing.Kevery(db=self.hby.db, lax=False, local=False, rvy=self.rvy)
         self.kvy.registerReplyRoutes(router=self.rtr)
-        self.psr = parsing.Parser(framed=True, kvy=self.kvy, rvy=self.rvy, exc=self.exc)
+        self.psr = parser if parser is not None else parsing.Parser(framed=True, kvy=self.kvy, rvy=self.rvy, exc=self.exc)
 
         self.notifier = notifier
 
