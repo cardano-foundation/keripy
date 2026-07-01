@@ -18,6 +18,7 @@ from keri.core import coring, eventing, serdering, MtrDex, Counter, Codens
 from keri.db import dbing
 from keri.kering import Roles
 from keri.peer import exchanging
+from keri.spac import payloading
 
 logger = ogler.getLogger()
 
@@ -39,7 +40,7 @@ class Poster(doing.DoDoer):
         doers = [doing.doify(self.deliverDo)]
         super(Poster, self).__init__(doers=doers, **kwa)
 
-    def deliverDo(self, tymth=None, tock=0.0):
+    def deliverDo(self, tymth=None, tock=0.0, **kwa):
         """
         Returns:  doifiable Doist compatible generator method that processes
                    a queue of messages and envelopes them in a `fwd` message
@@ -270,13 +271,31 @@ class StreamPoster:
         Usage:
             add result of doify on this method to doers list
         """
+        doers = []
+        while self.evts:
+            doers += self._chunk()
+
+        return doers
+
+    def _chunk(self):
         msg = bytearray()
+
+        if self.essr:
+            msg.extend(payloading.PayloadTyper(type=payloading.PayloadTypes.SCS).qb64b)
+            msg.extend(self.hab.kever.prefixer.qb64b)
+
+            # bext field can be randomized to reduce correlation based on packet size, empty for now
+            msg.extend(coring.Bexter(bext="").qb64b)
 
         while self.evts:
             evt = self.evts.popleft()
 
             serder = evt["serder"]
             atc = evt["attachment"] if "attachment" in evt else b''
+
+            if self.essr and len(msg) + len(serder.raw) + len(atc) > 16384:
+                self.evts.appendleft(evt)
+                break
 
             msg.extend(serder.raw)
             msg.extend(atc)
@@ -352,22 +371,20 @@ class StreamPoster:
         return self.messagers
 
     def _essrWrapper(self, hab, msg, ctrl):
-        ims = bytearray()
+        prefixer = coring.Prefixer(qb64=ctrl)
+        if prefixer.code in coring.NonTransDex:  # e.g. witness mbx
+            verfer = coring.Verfer(qb64=ctrl)
+        else:
+            rkever = self.hby.kevers[ctrl]
+            verfer = rkever.verfers[0]
 
-        # Can be added in deliver() once mailbox support added to avoid list copy
-        ims.extend(coring.Tsper(tsp=coring.Tsps.SCS).qb64b)
-        ims.extend(self.hab.kever.prefixer.qb64b)
-        ims.extend(msg)
-
-        rkever = self.hby.kevers[ctrl]
-        pubkey = pysodium.crypto_sign_pk_to_box_pk(rkever.verfers[0].raw)
-        raw = pysodium.crypto_box_seal(bytes(ims), pubkey)
+        pubkey = pysodium.crypto_sign_pk_to_box_pk(verfer.raw)
+        raw = pysodium.crypto_box_seal(bytes(msg), pubkey)
 
         texter = coring.Texter(raw=raw)
         diger = coring.Diger(ser=raw, code=MtrDex.Blake3_256)
         essr, _ = exchanging.exchange(route='/essr/req', sender=hab.pre, diger=diger,
                                       modifiers=dict(src=hab.pre, dest=ctrl))
-
         ims = hab.endorse(serder=essr, pipelined=False)
         ims.extend(Counter(Codens.ESSRPayloadGroup, count=1,
                            gvrsn=kering.Vrsn_1_0).qb64b)
@@ -396,11 +413,20 @@ class StreamPoster:
         # If we are one of the mailboxes, just store locally in mailbox
         owits = oset(ends.keys())
         if self.mbx and owits.intersection(hab.prefixes):
+            # Remove again if ESSR mode
+            if self.essr:
+                _tag = self.hby.psr.extract(msg, payloading.PayloadTyper)
+                _pre = self.hby.psr.extract(msg, coring.Prefixer)
+                _pad = self.hby.psr.extract(msg, coring.Bexter)
             self.mbx.storeMsg(topic=f"{self.recp}/{topic}".encode("utf-8"), msg=msg)
             return []
 
         # Its not us, randomly select a mailbox and forward it on
         mbx, mailbox = random.choice(list(ends.items()))
+
+        if self.essr:
+            msg = self._essrWrapper(hab, msg, mbx)
+
         ims = bytearray()
         ims.extend(introduce(hab, mbx))
         ims.extend(msg)
