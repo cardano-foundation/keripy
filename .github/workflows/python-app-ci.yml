@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ macos-13, ubuntu-latest ]
+        os: [ macos-15, ubuntu-latest ]
 
     steps:
       - uses: actions/checkout@v3
@@ -24,6 +24,11 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.12.2
+      - name: Config libsodium
+        if: runner.os == 'macOS'
+        run: |
+          echo "SODIUM_INSTALL=system" >> $GITHUB_ENV
+          echo "DYLD_LIBRARY_PATH=/opt/homebrew/lib:$DYLD_LIBRARY_PATH" >> $GITHUB_ENV
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
