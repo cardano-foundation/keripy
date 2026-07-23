@@ -195,18 +195,6 @@ class Exchanger:
                 args = ("qb64", "snh", "qb64")
                 sigers = []
 
-                dtnow = helping.nowUTC()
-                dater = self.hby.db.epsd.get(keys=(dig,))
-                if dater is None:
-                    raise ValidationError("Missing exn escrowed event datetime "
-                                          f"at dig = {dig}.")
-
-                dte = dater.datetime
-                if (dtnow - dte) > datetime.timedelta(seconds=self.TimeoutPSE):
-                    # escrow stale so raise ValidationError which unescrows below
-                    raise ValidationError("Stale exn event escrow "
-                                          f"at dig = {dig}.")
-
                 old = None  # empty keys
                 for keys, siger in self.hby.db.esigs.getItemIter(keys=(dig, "")):
                     quad = keys[1:]
@@ -231,8 +219,12 @@ class Exchanger:
                 self.processEvent(serder=serder, tsgs=tsgs, pathed=pathed, **kwargs)
 
             except MissingSignatureError as ex:
-                if logger.isEnabledFor(logging.DEBUG):
-                    logger.info("Exchange partially signed unescrow failed: %s", ex.args[0])
+                dater = self.hby.db.epsd.get(keys=(dig,))
+                if dater is None or (helping.nowUTC() - dater.datetime) > timedelta(seconds=self.TimeoutPSE):
+                    self.hby.db.epse.rem(dig)
+                    self.hby.db.epsd.rem(dig)
+                    self.hby.db.esigs.rem(dig)
+                    logger.info("Exchange partially signed stale escrow cleared: %s", ex.args[0])
                 else:
                     logger.error("Exchange partially signed failed: %s", ex.args[0])
             except Exception as ex:
