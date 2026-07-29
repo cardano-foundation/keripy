@@ -885,6 +885,54 @@ class Reger(dbing.LMDBer):
         """
         return self.delVal(self.oots, key)
 
+    def removeTransactionEscrows(self, pre, said):
+        """Remove exact TEL retry markers for one transaction event.
+
+        The TEL event and its attachments are retained because the same event
+        may already be present in a local registry.  This method only stops the
+        anchorless/out-of-order processors from retrying the cancelled work.
+
+        Parameters:
+            pre (str): qb64 TEL event prefix
+            said (str): qb64 TEL event SAID
+
+        Returns:
+            list[str]: names of the escrow tables from which a marker was
+                removed
+        """
+        preb = pre.encode("utf-8") if hasattr(pre, "encode") else bytes(pre)
+        saidb = said.encode("utf-8") if hasattr(said, "encode") else bytes(said)
+        removed = []
+
+        for name, iterator, remover in (
+            ("anchorless", self.getTaeItemIter, self.delTae),
+            ("outOfOrder", self.getOotItemIter, self.delOot),
+        ):
+            for key, dig in list(iterator()):
+                prefix, _ = dbing.splitSnKey(key)
+                if bytes(prefix) != preb or bytes(dig) != saidb:
+                    continue
+                if remover(key):
+                    removed.append(name)
+
+        return removed
+
+    def removeCredentialEscrows(self, said):
+        """Remove retry-only credential escrows for one credential SAID."""
+        removed = []
+        for name, escrow in (
+            ("missingRegistry", self.mre),
+            ("missingChain", self.mce),
+            ("missingSchema", self.mse),
+        ):
+            if escrow.rem(keys=(said,)):
+                removed.append(name)
+
+        if self.cmse.trim(keys=(said,), topive=True):
+            removed.append("missingSignature")
+
+        return removed
+
 
     def putAnc(self, key, val):
         """

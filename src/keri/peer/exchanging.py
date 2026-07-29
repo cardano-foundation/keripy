@@ -221,16 +221,12 @@ class Exchanger:
             except MissingSignatureError as ex:
                 dater = self.hby.db.epsd.get(keys=(dig,))
                 if dater is None or (helping.nowUTC() - dater.datetime) > timedelta(seconds=self.TimeoutPSE):
-                    self.hby.db.epse.rem(dig)
-                    self.hby.db.epsd.rem(dig)
-                    self.hby.db.esigs.rem(dig)
+                    self.removePartial(dig)
                     logger.info("Exchange partially signed stale escrow cleared: %s", ex.args[0])
                 else:
                     logger.error("Exchange partially signed failed: %s", ex.args[0])
             except Exception as ex:
-                self.hby.db.epse.rem(dig)
-                self.hby.db.epsd.rem(dig)
-                self.hby.db.esigs.rem(dig)
+                self.removePartial(dig)
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.exception("Exchange partially signed unescrowed: %s", ex.args[0])
                 else:
@@ -241,6 +237,30 @@ class Exchanger:
                 logger.info("Exchanger unescrow succeeded in valid exchange: "
                             "creder=%s", serder.said)
                 logger.debug(f"event=\n{serder.pretty()}\n")
+
+    def removePartial(self, said):
+        """Remove one partially signed exchange and all of its escrow artifacts.
+
+        This method is deliberately exact-by-SAID.  The caller is responsible
+        for deciding whether the exchange is safe to cancel.
+
+        Parameters:
+            said (str): qb64 SAID of the partially signed exchange
+
+        Returns:
+            SerderKERI: the removed exchange, or None when it was not in the
+                partially signed exchange escrow
+        """
+        serder = self.hby.db.epse.get(keys=(said,))
+        if serder is None:
+            return None
+
+        self.hby.db.epse.rem(keys=(said,))
+        self.hby.db.epsd.rem(keys=(said,))
+        self.hby.db.esigs.trim(keys=(said,), topive=True)
+        self.hby.db.epath.rem(keys=(said,))
+        self.hby.db.essrs.rem(keys=(said,))
+        return serder
 
     def logEvent(self, serder, pathed=None, tsgs=None, cigars=None, essrs=None):
         dig = serder.said

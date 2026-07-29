@@ -9,6 +9,7 @@ import os
 
 import lmdb
 
+from keri.core import coring
 from keri.core.coring import Diger, versify, Kinds
 from keri.db.dbing import openLMDB, dgKey, snKey
 from keri.vdr.viring import Reger
@@ -258,6 +259,39 @@ def test_issuer():
         assert issuer.getBaks(key) == []
 
     """End Test"""
+
+
+def test_remove_transaction_and_credential_escrows():
+    issuer = Reger(temp=True)
+    pre = b"EAUH2gz6NJLSKcRX6PIyj-cZ434rv-OteDL4QwXFMFl8"
+    said = b"EDAZJZcYwtbTCKBlICt4WDWNa7476HGeFTzL4Rd9_xsB"
+    snkey = snKey(pre, 0)
+
+    issuer.putTae(snkey, said)
+    issuer.putOot(snkey, said)
+    assert issuer.removeTransactionEscrows(pre, said) == [
+        "anchorless",
+        "outOfOrder",
+    ]
+    assert issuer.getTae(snkey) is None
+    assert issuer.getOot(snkey) is None
+    assert issuer.removeTransactionEscrows(pre, said) == []
+
+    credential = "EAUH2gz6NJLSKcRX6PIyj-cZ434rv-OteDL4QwXFMFl8"
+    issuer.mre.put(keys=(credential,), val=coring.Dater())
+    issuer.mce.put(keys=(credential,), val=coring.Dater())
+    issuer.mse.put(keys=(credential,), val=coring.Dater())
+    assert issuer.removeCredentialEscrows(credential) == [
+        "missingRegistry",
+        "missingChain",
+        "missingSchema",
+    ]
+    assert issuer.mre.get(keys=(credential,)) is None
+    assert issuer.mce.get(keys=(credential,)) is None
+    assert issuer.mse.get(keys=(credential,)) is None
+    assert issuer.removeCredentialEscrows(credential) == []
+
+    issuer.close(clear=True)
 
 
 def test_clone():
