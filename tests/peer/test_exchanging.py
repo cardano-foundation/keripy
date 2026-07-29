@@ -134,6 +134,45 @@ def test_exchanger():
         assert recHby.db.epse.get(keys=(fwd.said,)) is None
 
 
+def test_remove_partial_exchange():
+    with habbing.openHab(name="sid", base="test", salt=b'0123456789abcdef') as (hby, hab), \
+            habbing.openHab(name="rec", base="test", salt=b'0123456789abcdef') as (recHby, recHab):
+        exc = exchanging.Exchanger(hby=recHby, handlers=[])
+
+        ser, sigs, _ = hab.getOwnEvent(sn=0)
+        fwd, _ = exchanging.exchange(
+            route='/fwd',
+            sender=hab.pre,
+            modifiers=dict(pre="EBCAFG", topic="/delegation"),
+            payload={},
+            embeds=dict(evt=ser.raw),
+        )
+        tsgs = [(
+            hab.kever.prefixer,
+            coring.Seqner(sn=hab.kever.sn),
+            coring.Saider(qb64=hab.kever.serder.said),
+            sigs,
+        )]
+        exc.escrowPSEvent(
+            serder=fwd,
+            pathed=[bytearray(b"-AAB")],
+            tsgs=tsgs,
+        )
+
+        assert recHby.db.epse.get(keys=(fwd.said,)) is not None
+        assert recHby.db.epsd.get(keys=(fwd.said,)) is not None
+        assert recHby.db.epath.get(keys=(fwd.said,))
+
+        removed = exc.removePartial(fwd.said)
+        assert removed.said == fwd.said
+        assert recHby.db.epse.get(keys=(fwd.said,)) is None
+        assert recHby.db.epsd.get(keys=(fwd.said,)) is None
+        assert list(recHby.db.esigs.getItemIter(keys=(fwd.said,))) == []
+        assert recHby.db.epath.get(keys=(fwd.said,)) == []
+        assert recHby.db.essrs.get(keys=(fwd.said,)) == []
+        assert exc.removePartial(fwd.said) is None
+
+
 def test_exchange_ps_escrow_timeout():
     with habbing.openHab(name="sid", base="test", salt=b'0123456789abcdef') as (hby, hab), \
             habbing.openHab(name="rec", base="test", salt=b'0123456789abcdef') as (recHby, recHab):
