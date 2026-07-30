@@ -2816,6 +2816,56 @@ class Baser(dbing.LMDBer):
         """
         return self.delIoDupVal(self.pses, key, val)
 
+    def removeEscrowedEvent(self, pre, said):
+        """Remove one exact uncommitted event from PSE or OOE.
+
+        Parameters:
+            pre (str): qb64 identifier prefix
+            said (str): qb64 event SAID
+
+        Returns:
+            SerderKERI: removed event, or None when it is not in either escrow
+
+        Raises:
+            ValidationError: if the event is already in the accepted KEL
+        """
+        dgkey = dbing.dgKey(pre, said)
+        raw = self.getEvt(dgkey)
+        if raw is None:
+            return None
+
+        serder = serdering.SerderKERI(raw=bytes(raw))
+        if serder.pre != pre or serder.said != said:
+            return None
+
+        snkey = dbing.snKey(pre, serder.sn)
+        accepted = self.getKeLast(snkey)
+        if accepted is not None and bytes(accepted) == serder.saidb:
+            raise kering.ValidationError(
+                f"event {said} is in the accepted KEL and cannot be removed"
+            )
+
+        removed = self.delPse(snkey, serder.saidb)
+        removed = self.delOoe(snkey, serder.saidb) or removed
+        if not removed:
+            return None
+
+        self.gpse.rem(
+            keys=(pre,),
+            val=(
+                coring.Seqner(sn=serder.sn),
+                coring.Saider(qb64=serder.said),
+            ),
+        )
+        self.delSigs(dgkey)
+        self.delWigs(dgkey)
+        self.delDts(dgkey)
+        self.udes.rem(keys=dgkey)
+        self.esrs.rem(keys=dgkey)
+        self.delEvt(dgkey)
+
+        return serder
+
 
     def putPwes(self, key, vals):
         """

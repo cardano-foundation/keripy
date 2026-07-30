@@ -11,7 +11,7 @@ import pytest
 
 import lmdb
 from hio.base import doing
-from keri import core
+from keri import core, kering
 from keri.app import habbing
 from keri.core import coring, eventing, serdering
 from keri.core.coring import Kinds, versify, Seqner
@@ -1814,6 +1814,66 @@ def test_KERI_BASER_MAP_SIZE_handles_bad_values(caplog):
         Baser(reopen=False, temp=True)
         assert err_msg in caplog.messages
     os.environ.pop("KERI_BASER_MAP_SIZE")
+
+
+def test_remove_escrowed_event():
+    with openDB() as db:
+        pre = "DApYGFaqnrALTyejaJaGAVhNpSCtqyerPqWVK9ZBNZk0"
+        prior = "EAskHI462CuIMS_gNkcl_QewzrRSKH2p9zHQIO132Z30"
+
+        partial = eventing.interact(pre=pre, dig=prior, sn=1)
+        partial_snkey = snKey(pre, partial.sn)
+        partial_dgkey = dgKey(pre, partial.said)
+        db.putEvt(partial_dgkey, partial.raw)
+        db.putPses(partial_snkey, [partial.saidb])
+        db.putSigs(partial_dgkey, [b"signature"])
+        db.putDts(partial_dgkey, b"2026-01-01T00:00:00.000000+00:00")
+        db.gpse.add(
+            keys=(pre,),
+            val=(
+                coring.Seqner(sn=partial.sn),
+                coring.Saider(qb64=partial.said),
+            ),
+        )
+
+        other = eventing.interact(pre=pre, dig=prior, sn=1, data=[dict(x=1)])
+        other_dgkey = dgKey(pre, other.said)
+        db.putEvt(other_dgkey, other.raw)
+        db.putPses(partial_snkey, [other.saidb])
+
+        removed = db.removeEscrowedEvent(pre, partial.said)
+        assert removed.said == partial.said
+        assert db.getPses(partial_snkey) == [other.saidb]
+        assert db.gpse.cnt(keys=(pre,)) == 0
+        assert db.getEvt(partial_dgkey) is None
+        assert db.getSigs(partial_dgkey) == []
+        assert db.getDts(partial_dgkey) is None
+        assert db.getEvt(other_dgkey) == other.raw
+        assert db.removeEscrowedEvent(pre, partial.said) is None
+
+        out_of_order = eventing.interact(pre=pre, dig=prior, sn=2)
+        ooe_snkey = snKey(pre, out_of_order.sn)
+        ooe_dgkey = dgKey(pre, out_of_order.said)
+        db.putEvt(ooe_dgkey, out_of_order.raw)
+        db.putOoes(ooe_snkey, [out_of_order.saidb])
+
+        removed = db.removeEscrowedEvent(pre, out_of_order.said)
+        assert removed.said == out_of_order.said
+        assert db.getOoes(ooe_snkey) == []
+        assert db.getEvt(ooe_dgkey) is None
+
+        accepted = eventing.interact(pre=pre, dig=prior, sn=3)
+        accepted_snkey = snKey(pre, accepted.sn)
+        accepted_dgkey = dgKey(pre, accepted.said)
+        db.putEvt(accepted_dgkey, accepted.raw)
+        db.putPses(accepted_snkey, [accepted.saidb])
+        db.putKes(accepted_snkey, [accepted.saidb])
+
+        with pytest.raises(kering.ValidationError):
+            db.removeEscrowedEvent(pre, accepted.said)
+
+        assert db.getPses(accepted_snkey) == [accepted.saidb]
+        assert db.getEvt(accepted_dgkey) is not None
 
 
 def test_clear_escrows():
