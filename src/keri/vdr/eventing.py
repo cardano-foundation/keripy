@@ -1403,7 +1403,9 @@ class Tever:
         key = dgKey(serder.preb, serder.saidb)
         if seqner and saider:
             sealet = seqner.qb64b + saider.qb64b
-            self.reger.putAnc(key, sealet)
+            # overwrite: a rotation may supersede the anchor this event escrowed against,
+            # and the re-submitted event then carries a newer one
+            self.reger.setAnc(key, sealet)
         if bigers:
             self.reger.putTibs(key, [biger.qb64b for biger in bigers])
         if baks:
@@ -1412,7 +1414,8 @@ class Tever:
         self.reger.putTvt(key, serder.raw)
         logger.debug("Tever state: Escrowed anchorless event "
                      "event = %s", serder.ked)
-        return self.reger.putTae(snKey(serder.preb, serder.sn), serder.saidb)
+        # overwrite: the slot may be held by an earlier attempt at this same (pre, sn)
+        return self.reger.setTae(snKey(serder.preb, serder.sn), serder.saidb)
 
     def getBackerState(self, ked):
         """ Calculate and return the current list of backers for event dict
