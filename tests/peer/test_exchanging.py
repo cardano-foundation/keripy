@@ -134,6 +134,38 @@ def test_exchanger():
         assert recHby.db.epse.get(keys=(fwd.said,)) is None
 
 
+def test_exchanger_replay_does_not_rehandle():
+    with habbing.openHby(salt=core.Salter(raw=b'0123456789abcdef').qb64) as hby:
+        hab = hby.makeHab(name="test")
+
+        class CountingHandler:
+            resource = "/counting"
+
+            def __init__(self):
+                self.count = 0
+
+            def verify(self, serder, **kwargs):
+                return True
+
+            def handle(self, serder, **kwargs):
+                self.count += 1
+
+        handler = CountingHandler()
+        exc = exchanging.Exchanger(hby=hby, handlers=[handler])
+
+        msg = hab.exchange(route="/counting", recipient="", payload=dict(m="hello"))
+        said = serdering.SerderKERI(raw=msg).said
+
+        hby.psr.parseOne(ims=bytearray(msg), exc=exc)
+        assert handler.count == 1
+        assert hby.db.exns.get(keys=(said,)) is not None
+
+        # A re-parse still logs, so signatures from other members merge, but the behavior
+        # must not run again or the controller is notified twice.
+        hby.psr.parseOne(ims=bytearray(msg), exc=exc)
+        assert handler.count == 1
+
+
 def test_exchange_ps_escrow_timeout():
     with habbing.openHab(name="sid", base="test", salt=b'0123456789abcdef') as (hby, hab), \
             habbing.openHab(name="rec", base="test", salt=b'0123456789abcdef') as (recHby, recHab):

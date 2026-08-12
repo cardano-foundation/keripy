@@ -150,9 +150,17 @@ class Exchanger:
             logger.info(f"Behavior for {route} missing or does not have verify for said={serder.said}")
             logger.debug(f"event=\n{serder.pretty()}\n")
 
+        # A re-parse of an exn we already handled (endpoint retry, escrow release, mailbox
+        # replay, another group member's copy) must not run the behavior again: notices are
+        # keyed by a random rid, so handling twice notifies twice.
+        handled = self.hby.db.exns.get(keys=(serder.said,)) is not None
+
         # Always persist events
         self.logEvent(serder, pathed, tsgs, cigars, essrs)
         self.cues.append(dict(kin="saved", said=serder.said))
+
+        if handled:
+            return
 
         # Execute any behavior specific handling, not sure if this should be different than verify
         try:

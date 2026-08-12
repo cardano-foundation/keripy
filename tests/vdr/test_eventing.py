@@ -633,9 +633,9 @@ def test_tevery():
         assert tev.prefixer.qb64 == vcp.pre
         assert tev.sn == 0
 
-        # send vcp again, get error
-        with pytest.raises(LikelyDuplicitousError):
-            tvy.processEvent(serder=vcp, seqner=seqner, saider=saider)
+        # send vcp again, duplicate but not duplicitous
+        tvy.processEvent(serder=vcp, seqner=seqner, saider=saider)
+        assert tev.sn == 0
 
         # process issue vc event
         vcdig = b'EEBp64Aw2rsjdJpAR0e2qCq3jX7q7gLld3LjAwZgaLXU'
@@ -670,6 +670,20 @@ def test_tevery():
         status = tev.vcState(vcdig.decode("utf-8"))
         assert status.et == Ilks.rev
         assert status.s == '1'
+
+        # send rev again, state unchanged
+        tvy.processEvent(serder=rev, seqner=seqner, saider=saider)
+        status = tev.vcState(vcdig.decode("utf-8"))
+        assert status.et == Ilks.rev
+        assert status.s == '1'
+        assert status.d == rev.said
+
+        # a different rev at the same sn is still duplicitous
+        other = eventing.revoke(vcdig=vcdig.decode("utf-8"), regk=regk, dig=iss.said,
+                                dt="2021-01-01T00:00:00.000000+00:00")
+        assert other.said != rev.said
+        with pytest.raises(LikelyDuplicitousError):
+            tvy.processEvent(serder=other, seqner=seqner, saider=saider)
 
 
 def test_tevery_process_escrow(mockCoringRandomNonce):

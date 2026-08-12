@@ -1579,6 +1579,10 @@ class Tevery:
             if ilk in (Ilks.vcp,):
                 # we don't have multiple signatures to verify so this
                 # is already first seen and then lifely duplicitious
+                dig = self.reger.getTel(snKey(pre=regk, sn=0))
+                if dig is not None and bytes(dig) == serder.saidb:
+                    return  # event is a duplicate but not duplicitous
+
                 raise LikelyDuplicitousError("Likely Duplicitous event={}.".format(ked))
 
             tever = self.tevers[regk]
@@ -1604,7 +1608,11 @@ class Tevery:
                     # actually, lets not because the Kevery has no idea what to do with them!
                     # self.cues.append(dict(kin="receipt", serder=serder))
                     pass
-            else:  # duplicitious
+            else:  # maybe duplicitous
+                dig = self.reger.getTel(snKey(pre=pre, sn=sn))
+                if dig is not None and bytes(dig) == serder.saidb:
+                    return  # event is a duplicate but not duplicitous
+
                 raise LikelyDuplicitousError("Likely Duplicitous event={} with sn {}.".format(ked, sn))
 
     def processQuery(self, serder, source=None, sigers=None, cigars=None):
