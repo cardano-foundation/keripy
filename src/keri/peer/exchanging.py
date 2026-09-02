@@ -84,7 +84,7 @@ class Exchanger:
                                                 f"{sender}, from {prefixer.qb64} on exn msg=\n{serder.pretty()}\n")
 
                 if prefixer.qb64 not in self.kevers or self.kevers[prefixer.qb64].sn < seqner.sn:
-                    if self.escrowPSEvent(serder=serder, tsgs=tsgs, pathed=pathed):
+                    if self.escrowPSEvent(serder=serder, tsgs=tsgs, pathed=pathed, essrs=essrs):
                         self.cues.append(dict(kin="query", q=dict(r="logs", pre=prefixer.qb64, sn=seqner.snh)))
                     raise MissingSignatureError(f"Unable to find sender {prefixer.qb64} in kevers"
                                                 f" for evt = {serder.ked}.")
@@ -94,7 +94,7 @@ class Exchanger:
                 _, indices = eventing.verifySigs(serder.raw, sigers, verfers)
 
                 if not tholder.satisfy(indices):  # We still don't have all the sigers, need to escrow
-                    if self.escrowPSEvent(serder=serder, tsgs=tsgs, pathed=pathed):
+                    if self.escrowPSEvent(serder=serder, tsgs=tsgs, pathed=pathed, essrs=essrs):
                         self.cues.append(dict(kin="query", q=dict(r="logs", pre=prefixer.qb64, sn=seqner.snh)))
                     raise MissingSignatureError(f"Not enough signatures in  {indices}"
                                                 f" for evt = {serder.ked}.")
@@ -110,7 +110,7 @@ class Exchanger:
                                                 " for evt = {}.".format(cigar,
                                                                         serder.ked))
         else:
-            self.escrowPSEvent(serder=serder, tsgs=[], pathed=pathed)
+            self.escrowPSEvent(serder=serder, tsgs=[], pathed=pathed, essrs=essrs)
             raise MissingSignatureError("Failure satisfying exn, no cigs or sigs"
                                         " for evt = {}.".format(serder.ked))
 
@@ -175,13 +175,14 @@ class Exchanger:
         """
         self.processEscrowPartialSigned()
 
-    def escrowPSEvent(self, serder, tsgs, pathed):
+    def escrowPSEvent(self, serder, tsgs, pathed, essrs=None):
         """ Escrow event that does not have enough signatures.
 
         Parameters:
             serder (Serder): instance of event
             tsgs (list): quadlet of prefixer seqner, saider, sigers
             pathed (list): list of bytes of attached paths
+            essrs (list): Texter instances of attached ESSR payloads
 
         """
         dig = serder.said
@@ -192,7 +193,27 @@ class Exchanger:
 
         self.hby.db.epsd.put(keys=(dig,), val=coring.Dater())
         self.hby.db.epath.pin(keys=(dig,), vals=[bytes(p) for p in pathed])
+        for texter in essrs or []:
+            self.hby.db.essrs.add(keys=(dig,), val=texter)
         return self.hby.db.epse.put(keys=(dig,), val=serder)
+
+    def removePSEscrow(self, dig):
+        """ Remove escrow state for exn with SAID dig.
+
+        epath and essrs double as permanent storage written by logEvent under
+        the same keys, so they are only removed when the exn was never accepted
+        into exns.
+
+        Parameters:
+            dig (str): qb64 SAID of escrowed exn
+
+        """
+        self.hby.db.epse.rem(keys=(dig,))
+        self.hby.db.epsd.rem(keys=(dig,))
+        self.hby.db.esigs.rem(keys=(dig,))
+        if self.hby.db.exns.get(keys=(dig,)) is None:
+            self.hby.db.epath.rem(keys=(dig,))
+            self.hby.db.essrs.rem(keys=(dig,))
 
     def processEscrowPartialSigned(self):
         """ Process escrow of partially signed messages """
@@ -229,23 +250,18 @@ class Exchanger:
             except MissingSignatureError as ex:
                 dater = self.hby.db.epsd.get(keys=(dig,))
                 if dater is None or (helping.nowUTC() - dater.datetime) > timedelta(seconds=self.TimeoutPSE):
-                    self.hby.db.epse.rem(dig)
-                    self.hby.db.epsd.rem(dig)
-                    self.hby.db.esigs.rem(dig)
+                    self.removePSEscrow(dig)
                     logger.info("Exchange partially signed stale escrow cleared: %s", ex.args[0])
                 else:
                     logger.error("Exchange partially signed failed: %s", ex.args[0])
             except Exception as ex:
-                self.hby.db.epse.rem(dig)
-                self.hby.db.epsd.rem(dig)
-                self.hby.db.esigs.rem(dig)
+                self.removePSEscrow(dig)
                 if logger.isEnabledFor(logging.DEBUG):
                     logger.exception("Exchange partially signed unescrowed: %s", ex.args[0])
                 else:
                     logger.error("Exchange partially signed unescrowed: %s", ex.args[0])
             else:
-                self.hby.db.epse.rem(dig)
-                self.hby.db.esigs.rem(dig)
+                self.removePSEscrow(dig)
                 logger.info("Exchanger unescrow succeeded in valid exchange: "
                             "creder=%s", serder.said)
                 logger.debug(f"event=\n{serder.pretty()}\n")
