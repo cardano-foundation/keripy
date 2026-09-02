@@ -101,6 +101,55 @@ def test_essrs():
         assert recHby.db.exns.get(keys=(essr.said,)) is None
 
 
+def test_essr_escrow_when_sender_kel_unknown():
+    with habbing.openHab(name="sid", base="test", salt=b'0123456789abcdef') as (hby, hab), \
+            habbing.openHab(name="rec", base="test", salt=b'0123456789abcdef') as (recHby, recHab):
+
+        msg = dict(msg="This is a test message that must be secured", i=hab.pre)
+        pubkey = pysodium.crypto_sign_pk_to_box_pk(recHab.kever.verfers[0].raw)
+        raw = pysodium.crypto_box_seal(json.dumps(msg).encode("utf-8"), pubkey)
+
+        texter = coring.Texter(raw=raw)
+        diger = coring.Diger(ser=raw, code=MtrDex.Blake3_256)
+        essr, _ = exchanging.exchange(route='/essr/req', sender=hab.pre, diger=diger,
+                                      modifiers=dict(src=hab.pre, dest=recHab.pre))
+        ims = hab.endorse(serder=essr, pipelined=False)
+        ims.extend(core.Counter(core.Codens.ESSRPayloadGroup, count=1,
+                                gvrsn=kering.Vrsn_1_0).qb64b)
+        ims.extend(texter.qb64b)
+
+        exc = exchanging.Exchanger(hby=recHby, handlers=[])
+
+        # exn arrives before the sender's KEL so it must escrow with its ESSR payload
+        parsing.Parser().parse(ims=bytearray(ims), kvy=recHby.kvy, exc=exc,
+                               gvrsn=kering.Vrsn_1_0)
+
+        assert recHby.db.exns.get(keys=(essr.said,)) is None
+        assert recHby.db.epse.get(keys=(essr.said,)) is not None
+        assert [t.qb64 for t in recHby.db.essrs.get(keys=(essr.said,))] == [texter.qb64]
+
+        # replaying the escrow before the KEL arrives must not drop it
+        exc.processEscrow()
+        assert recHby.db.epse.get(keys=(essr.said,)) is not None
+        assert [t.qb64 for t in recHby.db.essrs.get(keys=(essr.said,))] == [texter.qb64]
+
+        # sender's KEL arrives and the escrow replay processes the exn intact
+        parsing.Parser().parse(ims=hab.makeOwnInception(), kvy=recHby.kvy)
+        exc.processEscrow()
+
+        serder = recHby.db.exns.get(keys=(essr.said,))
+        assert serder is not None
+        assert serder.ked['a'] == diger.qb64
+
+        essrs = recHby.db.essrs.get(keys=(essr.said,))
+        assert [t.qb64 for t in essrs] == [texter.qb64]
+        raw = recHab.decrypt(ser=essrs[0].raw)
+        assert json.loads(raw.decode("utf-8")) == msg
+
+        assert recHby.db.epse.get(keys=(essr.said,)) is None
+        assert recHby.db.epsd.get(keys=(essr.said,)) is None
+
+
 def test_exchanger():
     with habbing.openHab(name="sid", base="test", salt=b'0123456789abcdef') as (hby, hab), \
             habbing.openHab(name="rec", base="test", salt=b'0123456789abcdef') as (recHby, recHab):
