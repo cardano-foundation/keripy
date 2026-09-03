@@ -13,13 +13,15 @@ from keri.core import coring
 from keri.db import dbing, subing
 
 
-def notice(attrs, dt=None, read=False):
+def notice(attrs, dt=None, read=False, rid=None):
     """
 
     Parameters:
         attrs (dict): payload of the notice
         dt(Optional(str, datetime)): iso8601 formatted datetime of notice
         read (bool): message read indicator
+        rid (str): qb64 ID of the notice. Defaults to a random nonce. Pass the SAID of the
+            exn that caused the notice so that a re-delivery of that exn dedups in Noter.add
 
     Returns:
         Notice:  Notice instance
@@ -30,7 +32,7 @@ def notice(attrs, dt=None, read=False):
     if hasattr(dt, "isoformat"):
         dt = dt.isoformat()
 
-    pad = dict(i="",
+    pad = dict(i=rid if rid is not None else "",
                dt=dt,
                r=read,
                a=attrs
@@ -278,7 +280,7 @@ class Noter(dbing.LMDBer):
         Adds note to database, keyed by the datetime and said of the note.
 
         Parameters:
-            rid (str): qb64 random ID of note to get
+            rid (str): qb64 ID of note to get
 
         Returns:
             (Notice, Cigar) = couple of notice object and accompanying signature
@@ -298,7 +300,7 @@ class Noter(dbing.LMDBer):
         Remove note from database if it exists
 
         Parameters:
-            rid (str): qb64 random ID of note to remove
+            rid (str): qb64 ID of note to remove
 
         Returns:
             bool:  True if deleted
@@ -375,18 +377,19 @@ class Notifier:
         self.signaler = signaler if signaler is not None else signaling.Signaler()
         self.noter = noter if noter is not None else Noter(name=hby.name, temp=hby.temp)
 
-    def add(self, attrs):
+    def add(self, attrs, rid=None):
         """  Add unread notice to the end of the current list of notices
 
         Args:
             attrs (dict): body of a new unread notice to append to the current list of notices
+            rid (str): qb64 ID of the notice, defaults to a random nonce
 
         Returns:
             bool: returns True if the notice was added
 
         """
 
-        note = notice(attrs, dt=helping.nowIso8601())
+        note = notice(attrs, dt=helping.nowIso8601(), rid=rid)
         cig = self.hby.signator.sign(ser=note.raw)
         if self.noter.add(note, cig):
             signal = dict(
@@ -402,10 +405,10 @@ class Notifier:
     def rem(self, rid):
         """ Mark as Read
 
-        Delete the note identified by the provided random ID
+        Delete the note identified by the provided ID
 
         Parameters:
-            rid (str): qb64 random ID of the Note to delete
+            rid (str): qb64 ID of the Note to delete
 
         Returns:
             bool: True means the note was deleted, False otherwise
@@ -434,7 +437,7 @@ class Notifier:
         Mark the note identified by the provided SAID as having been read by the controller of the agent
 
         Parameters:
-            rid (str): qb64 random ID of the Note to mark as read
+            rid (str): qb64 ID of the Note to mark as read
 
         Returns:
             bool: True means the note was marked as read, False otherwise
