@@ -159,3 +159,4 @@ def test_delegation_request_handler(mockHelpingNowUTC):
         handler.handle(serder=exn)
 
         assert len(notifier.getNotes()) == 1
+        assert notifier.getNotes()[0].rid == exn.said

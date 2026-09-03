@@ -756,6 +756,7 @@ def test_multisig_rotate_handler(mockHelpingNowUTC):
 
         # One notification
         assert len(notifier.signaler.signals) == 1
+        assert notifier.getNotes()[0].rid == exn.said
 
         esaid = exn.ked['e']['d']
         saiders = hby1.db.meids.get(keys=(esaid, ))

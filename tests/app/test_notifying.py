@@ -8,6 +8,7 @@ import datetime
 import pytest
 
 from keri.app import notifying, habbing
+from keri.vc import protocoling
 from keri.core import coring
 from keri.db import dbing
 from keri.help import helping
@@ -221,3 +222,61 @@ def test_notifier(mockHelpingNowUTC):
 
     assert notifier.mar(note.rid) is False
     assert notifier.rem(note.rid) is True
+
+
+def test_notice_rid():
+    payload = dict(name="John", msg="test")
+    said = "EBfdlu8R27Fbx-ehrqwImnK-8Cm79sqbAQ4MmvEAYqao"
+
+    note = notifying.notice(attrs=payload, rid=said)
+    assert note.rid == said
+    assert note.pad['i'] == said
+
+    # a second notice for the same exn keeps the id even though the datetime moves
+    other = notifying.notice(attrs=payload, rid=said, dt="2022-07-08T15:01:05.453632")
+    assert other.rid == said
+    assert other.datetime != note.datetime
+
+    # unchanged default: no rid means a random nonce, so two notices differ
+    assert notifying.notice(attrs=payload).rid != notifying.notice(attrs=payload).rid
+
+
+def test_notifier_dedups_on_rid():
+    with habbing.openHby(name="test") as hby:
+        notifier = notifying.Notifier(hby=hby)
+        said = "EBfdlu8R27Fbx-ehrqwImnK-8Cm79sqbAQ4MmvEAYqao"
+
+        assert notifier.add(attrs=dict(r="/exn/ipex/grant", d=said), rid=said) is True
+        assert notifier.add(attrs=dict(r="/exn/ipex/grant", d=said), rid=said) is False
+
+        notes = notifier.getNotes()
+        assert len(notes) == 1
+        assert notes[0].rid == said
+
+        # a deleted notice may legitimately come back on a later re-delivery
+        assert notifier.rem(said) is True
+        assert notifier.add(attrs=dict(r="/exn/ipex/grant", d=said), rid=said) is True
+        assert len(notifier.getNotes()) == 1
+
+        # a read notice still dedups
+        assert notifier.mar(said) is True
+        assert notifier.add(attrs=dict(r="/exn/ipex/grant", d=said), rid=said) is False
+        assert len(notifier.getNotes()) == 1
+
+
+def test_ipex_handler_redelivery_notifies_once():
+    with habbing.openHab(name="sid", temp=True, salt=b'0123456789abcdef') as (hby, hab):
+        notifier = notifying.Notifier(hby=hby)
+        ipexhan = protocoling.IpexHandler(resource="/ipex/apply", hby=hby, notifier=notifier)
+
+        apply0, _ = protocoling.ipexApplyExn(hab, message="Please give me a credential",
+                                             schema="EMQWEcCnVRk1hatTNyK3sIykYSrrFvafX3bHQ9Gkk1kC",
+                                             recp=hab.pre, attrs={})
+
+        ipexhan.handle(serder=apply0)
+        ipexhan.handle(serder=apply0)
+
+        notes = notifier.getNotes()
+        assert len(notes) == 1
+        assert notes[0].rid == apply0.said
+        assert notes[0].attrs['d'] == apply0.said

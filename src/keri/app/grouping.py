@@ -635,7 +635,7 @@ class Multiplexor:
                     d=serder.said
                 )
 
-                self.notifier.add(attrs=data)
+                self.notifier.add(attrs=data, rid=serder.said)
 
         self.hby.db.meids.add(keys=(esaid,), val=coring.Saider(qb64=serder.said))
         self.hby.db.maids.add(keys=(esaid,), val=coring.Prefixer(qb64=serder.pre))
@@ -674,7 +674,7 @@ class Multiplexor:
                     e=embed['d']
                 )
 
-                self.notifier.add(attrs=data)
+                self.notifier.add(attrs=data, rid=serder.said)
 
     def get(self, esaid):
         saiders = self.hby.db.meids.get(keys=(esaid,))

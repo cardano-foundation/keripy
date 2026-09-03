@@ -250,7 +250,7 @@ class OobiRequestHandler:
         if "name" in params:
             data["oobialias"] = params["name"][0]
 
-        self.notifier.add(attrs=data)
+        self.notifier.add(attrs=data, rid=serder.said)
 
 
 def oobiRequestExn(hab, dest, oobi):

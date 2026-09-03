@@ -127,7 +127,7 @@ class IpexHandler:
             m=attrs["m"]
         )
 
-        self.notifier.add(attrs=data)
+        self.notifier.add(attrs=data, rid=serder.said)
 
 
 def ipexApplyExn(hab, recp, message, schema, attrs):

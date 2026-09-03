@@ -41,6 +41,7 @@ def test_oobi_share(mockHelpingNowUTC):
         signal = notifier.signaler.signals.popleft()
         assert signal.pad['r'] == '/notification'
         rid = signal.attrs['note']['i']
+        assert rid == exn.said
 
         note, _ = notifier.noter.get(rid)
         assert note.attrs == {'oobi': 'http://127.0.0.1:5642/oobi/Egw3N07Ajdkjvv4LB2Mhx2qxl6TOCFdWNJU6cYR_ImFg/witness/'

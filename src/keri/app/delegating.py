@@ -295,7 +295,7 @@ class DelegateRequestHandler:
         if "aids" in pay:
             data["aids"] = pay["aids"]
 
-        self.notifier.add(attrs=data)
+        self.notifier.add(attrs=data, rid=serder.said)
 
 
 def delegateRequestExn(hab, delpre, evt, aids=None):
